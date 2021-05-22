@@ -1,0 +1,269 @@
+gc()
+result <- replicate(50, rfcv(selectsnps[,-c(1)],selectsnps[,1], 
+cv.fold=5, scale="log", step=0.5, recursive=FALSE), simplify=FALSE)
+error.cv <- sapply(result, "[[", "error.cv")
+
+matplot(result[[1]]$n.var,rowMeans(error.cv), type="o",
+lwd=c(2, rep(1, ncol(error.cv))), col=1, lty=1, log="x",
+ xlab="Number of snps", ylab="CV Error",main="select vars/wrapper var. selection",xaxt="n",ylim=c(0,0.4))
+axis(side=1, at=c(4387,2194,1097,548,274,137,69,34,17,9,4,2,1))
+
+result[[50]]$error.cv
+cvselect<-rep(1,13)
+for(i in 1:50){
+cvselect<-cbind(cvselect,result[[i]]$error.cv)
+}
+dim(cvselect)
+cvselect<-data.frame(cvselect)
+cvselect<-cvselect[,-c(1)]
+write.csv(cvselect,"cvselectrow.csv")
+cv.select<-fread("C:/Users/user/Desktop/cvselect.csv",header=T,sep=",")
+cv.select[,1]
+
+cv.selectrow<-fread("C:/Users/user/Desktop/cvselectrow.csv",header=T,sep=",")
+try<- rev(cv.selectrow)
+
+# Boxplot of cv----------------------------------------------
+selectvarplot<-boxplot(try, main="snps select by cv.error /50 times each var.num.(wrapper method)", 
+  	xlab="Number of snps", ylab="Error Rate",ylim=c(0.2,0.35))
+
+
+#choose m-----------------------------------------------------------------------
+resultp/2 <- rfcv(selectsnps[,-c(1)],selectsnps[,1], 
+cv.fold=5, scale="log", step=0.5,mtry=function(p)(p/2) ,recursive=FALSE)
+matplot(result.p/2[[1]]$n.var,cbind(error.cv,cv.slect[,1]), type="o",
+lwd=c(2, rep(1, ncol(error.cv))), col=1, lty=1, log="x",
+ xlab="Number of snps", ylab="CV Error",main="select vars/wrapper var. selection",xaxt="n",ylim=c(0,0.4))
+axis(side=1, at=c(4387,2194,1097,548,274,137,69,34,17,9,4,2,1))
+
+#select first 137 snps plot---------------------------------------------------------
+rf=randomForest(Affection ~ . , data =selectsnps,importane = T,do.trace=1000,proximity = T,ntree=5000)
+rf
+
+plot(rf,main="")
+
+layout(matrix(c(1,2),nrow=1),
+       width=c(4,1)) 
+par(mar=c(5,4,4,0)) #No margin on the right side
+plot(rf, log="y",main="selected 4400 snps set")
+par(mar=c(5,0,4,2)) #No margin on the left side
+plot(c(0,1),type="n", axes=F, xlab="", ylab="")
+legend("top", colnames(rf$err.rate),col=1:4,cex=0.8,fill=1:4)
+
+varImpPlot(rf,type=2,main="Variable Importance selected 4400 snps set")
+
+rn <- round(importance(rf), 2)
+snpss<-rn[order(rn[,1], decreasing=T),][1:137]
+str(snpss)
+rn[1]
+name137<-names(snpss)
+name137<-as.vector(name137)
+str(name137)
+select137<-selectsnps[ , which(names(selectsnps) %in% name137)]
+select137<-setDF(select137)
+dim(select137)
+write.csv(select137,"select137.csv")
+
+#RF,TREE,SVM,KNN 137 snps-------
+##RF--------------------------------------------
+train<-sample(1:2062,1650)
+train<-as.vector(train)
+str(train)
+select137<-cbind(datafirst9$Affection,select137)
+select137[] <- lapply( select137, factor) # the "[]" keeps the dataframe structure
+ col_names <- names(select137)
+colnames(select137)[1] <- "Affection"
+str(select137)
+ 
+select137train<-select137[c(train),]
+dim(select137train)
+select137train<-as.vector(
+select137train[] <- lapply( select137train, factor) # the "[]" keeps the dataframe structure
+ col_names <- names(select137train)
+colnames(select137train)[1] <- "Affection"
+select137test<-select137[-c(train),]
+
+rf137=randomForest(Affection ~ . , data =select137,subset=train,importane = T,do.trace=1000,proximity = T,ntree=5000)
+rf137
+
+plot(rf137,main="select 137 snps set")
+
+layout(matrix(c(1,2),nrow=1),
+       width=c(4,1)) 
+par(mar=c(5,4,4,0)) #No margin on the right side
+plot(rf137, log="y",main="select 137 snps set")
+par(mar=c(5,0,4,2)) #No margin on the left side
+plot(c(0,1),type="n", axes=F, xlab="", ylab="")
+legend("top", colnames(rf137$err.rate),col=1:4,cex=0.8,fill=1:4)
+
+varImpPlot(rf137,type=2,main="Variable Importance selected 137 snps set")
+
+prediction <- predict(rf137,select137test)      
+
+table<-table(select137test$Affection, prediction, dnn = c('Actual Group','Predicted Group'))
+select137test$rightPred <- prediction ==select137test$Affection   
+accuracy <- sum(select137test$rightPred)/nrow(select137test)
+diag(prop.table(table, 1))
+
+
+#correlation plot------------------------------------------------------
+install.packages("corrplot")
+on137snps<-selectsnps[,-c(1)]
+on45snps<-on137snps[,c(1:45)]
+library(corrplot)
+
+# how to get correlation
+on45snps[] <- lapply(on45snps,as.integer)
+cor(on50snps)
+#            x          y
+# x  1.0000000 -0.0369479
+# y -0.0369479  1.0000000
+
+# visualize it
+library(corrplot)
+corrplot(cor(on45snps))
+ To have a look at the mapping for your data, try lapply(on137snps,levels)
+
+
+#decision tree---------------------------------------------------------
+install.packages("tree")
+library(tree)
+require(rpart)
+tree<-tree(Affection~.,select137train)
+dim(select137train)
+summary(tree)
+
+plot(tree)
+text(tree,pretty=0)
+
+tree.1p<-predict(tree,select137test,type="class")
+
+table<-table(select137test$Affection,tree.1p, dnn = c('Actual Group','Predicted Group'))
+select137test$rightPred <- prediction ==select137test$Affection   
+accuracy <- sum(select137test$rightPred)/nrow(select137test)
+diag(prop.table(table, 1))
+sum(diag(table))/sum(table)
+
+tree.cv<-cv.tree(tree,FUN=prune.misclass)
+names(tree.cv)
+tree.cv
+par(mfrow=c(1,2))
+plot(tree.cv$size,tree.cv$dev,type="b")
+plot(tree.cv$k,tree.cv$dev,type="b")
+
+pruneclass<-prune.misclass(tree,best=3)
+plot(pruneclass)
+text(pruneclass,pretty=0)
+
+# CART的模型：把存活與否的變數(Survived)當作Y，剩下的變數當作X
+dtreeM <- rpart(formula = Affection ~ ., data =select137train, method = "class")
+plot(dtreeM)
+text(dtreeM,pretty=0)
+plotcp(dtreeM)
+tree.2p<-predict(dtreeM,select137test,type="class")
+
+table<-table(select137test$Affection,tree.1p, dnn = c('Actual Group','Predicted Group'))
+select137test$rightPred <- prediction ==select137test$Affection   
+accuracy <- sum(select137test$rightPred)/nrow(select137test)
+diag(prop.table(table, 1))
+sum(diag(table))/sum(table)
+dim(select137train)
+
+#compare 137 snps at random--------------------------------------------
+sample<-sample(10:433197,137)
+random<-dataselectmerge[,c(sample(10:433197,137))]
+dim(random)
+random137<-cbind(datafirst9$Affection,random)
+dim(random137)
+random137[] <- lapply( random137, factor) # the "[]" keeps the dataframe structure
+ col_names <- names(random137)
+colnames(random137)[1] <- "Affection"
+rfrandom=randomForest(Affection ~ . , data =random137,importane = T,do.trace=1000,proximity = T,ntree=5000)
+rfrandom
+
+plot(rfranodm,main="select 137 random snps set")
+
+layout(matrix(c(1,2),nrow=1),
+       width=c(4,1)) 
+par(mar=c(5,4,4,0)) #No margin on the right side
+plot(rfrandom, log="y",main="select 137 random snps set")
+par(mar=c(5,0,4,2)) #No margin on the left side
+plot(c(0,1),type="n", axes=F, xlab="", ylab="")
+legend("top", colnames(rfrandom$err.rate),col=1:4,cex=0.8,fill=1:4)
+
+varImpPlot(rfrandom,type=2,main="Variable Importance selected 137 random snps set")
+
+prediction <- predict(rfrandom,select137test)      
+
+table<-table(select137test$Affection, prediction, dnn = c('Actual Group','Predicted Group'))
+select137test$rightPred <- prediction ==select137test$Affection   
+accuracy <- sum(select137test$rightPred)/nrow(select137test)
+diag(prop.table(table, 1))
+
+
+
+#SVM KNN---------------------------------------------------------------
+install.packages("caret")
+library(lattice)
+library(ggplot2)
+library(caret)
+
+dummies <- dummyVars(~ ., data=select137train[,-1])
+c2 <- predict(dummies,select137train[,-1])
+d_training <- as.data.frame(cbind(select137train$Affection, c2))
+colnames(d_training)[1] <- "Affection"
+
+dummies <- dummyVars(~ ., data=select137test[,-1])
+c2 <- predict(dummies, select137test[,-1])
+d_test <- as.data.frame(cbind(select137test$Affection, c2))
+colnames(d_test)[1] <- "Affection"
+### SVM ###
+install.packages("e1071")
+library(e1071)
+gammalist <- c(0.005,0.01,0.015,0.02,0.025,0.03,0.035,0.04,0.045,0.05)
+tune.out <- tune.svm(as.factor(Affection) ~., data=d_training, 
+                 kernel='radial', cost=2^(-1:5), gamma = gammalist)
+summary(tune.out)
+summary(tune.out$best.model)
+svm1 <- predict(tune.out$best.model, d_test[,-1])
+confusionMatrix(svm1, as.factor(d_test$V1))
+
+tune.out2 <- tune.svm(as.factor(V1) ~., data=d_training, 
+                     kernel='linear', cost=2^(-1:5), gamma = gammalist)
+summary(tune.out2)
+summary(tune.out2$best.model)
+svm2 <- predict(tune.out2$best.model, d_test[,-1])
+confusionMatrix(svm2, as.factor(d_test$V1))
+library(class)
+set.seed(1)
+init.dftrainx<-select137[c(train),-c(1)]
+init.dftrainy<-select137[c(train),c(1)]
+init.testx<-select137[-c(train),-c(1)]
+knn.pred<-knn(init.dftrainx,init.testx,init.dftrainy)
+HAM<-rep("HAM",249)
+table(knn.pred,HAM)
+mean(knn.pred=="HAM")
+
+#LDA-------------------------------------------------------------------
+library(MASS)
+str(select137train)
+dim(select137)
+z <- qda(Sp ~ ., Iris, prior = c(1,1,1)/3, subset = train)
+lda.fit<-lda(Affection ~ .,select137,subset=train)
+lda.fit
+
+lda.class=predict(qda.fit,select137test)$class
+tablelda<-table(select137test$Affection, qda.class, dnn = c('Actual Group','Predicted Group'))
+
+diag(prop.table(tablelda, 1))
+
+#extra plot-------------------------------------------------------------
+rf.1<-rfcv(selectsnps[,-c(1)],selectsnps[,1], cv.fold=5, scale="log", step=0.5, recursive=FALSE)
+with(result, plot(result[[1]]$n.var, result[[2]]$n.varerror.cv, log="x", type="o", lwd=2,xlab="Number of snps", ylab="CV Error",main="select vars/wrapper var. selection"))
+
+rndF1 <- randomForest(train.X, train.Y, test.X, test.Y)
+plot(rndF1)
+rndF1.legend <- if (is.null(rndF1$test$err.rate)) {colnames(rndF1$err.rate)}
+                else {colnames(rndF1$test$err.rate)}
+
+legend("top", cex =0.5, legend=rndF1.legend, lty=c(1,2,3), col=c(1,2,3), horiz=T)

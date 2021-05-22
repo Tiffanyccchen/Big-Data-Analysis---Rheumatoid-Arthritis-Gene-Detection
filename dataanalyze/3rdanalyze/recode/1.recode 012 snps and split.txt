@@ -1,0 +1,67 @@
+#read 44 10000snps dataset---------------------------------------
+rm(list=ls())
+require(data.table)
+datafirst9<-fread("C:/Users/user/Desktop/BDA/data/naracvarsplit/datafirst9.csv",header=T,sep=",",na.strings="?")
+library(SNPassoc)
+# set working directory
+setwd("C:/Users/user/Desktop")
+
+ 
+# list all csv files from the current directory
+list.files(pattern=".csv$") # use the pattern argument to define a common pattern  for import files with regex. Here: .csv
+ 
+# create a list from these files
+list.filenames<-list.files(pattern=".csv$")
+ 
+# create an empty list that will serve as a container to receive the incoming files
+list.data<-list()
+ 
+# create a loop to read in your data
+
+for (i in 1:length(list.filenames)){
+gc()
+list.data[[i]]<-fread(list.filenames[i])
+}
+gc()
+
+
+#analyze-------------------------------------------------------
+for(i in 1:44){
+gc()
+sel<-list.data[i]
+sel<-as.data.frame(sel)
+sel<-sel[,-c(1)]
+is.na(sel) <- sel==""
+sel<-cbind(datafirst9$Affection,sel)
+
+sel[] <- lapply( sel, factor) # the [] keeps the dataframe structure
+col_names <- names(sel)
+colnames(sel)[1] <- "Affection"
+
+sel[] <- lapply(sel, gsub, pattern = "A_G", replacement = "AG", fixed = TRUE)
+sel[] <- lapply(sel, gsub, pattern = "G_A", replacement = "AG", fixed = TRUE)
+sel[] <- lapply(sel, gsub, pattern = "G_G", replacement = "GG", fixed = TRUE)
+sel[] <- lapply(sel, gsub, pattern = "A_A", replacement = "AA", fixed = TRUE)
+sel[] <- lapply(sel, gsub, pattern = "C_T", replacement = "CT", fixed = TRUE)
+sel[] <- lapply(sel, gsub, pattern = "T_C", replacement = "TC", fixed = TRUE)
+sel[] <- lapply(sel, gsub, pattern = "C_C", replacement = "CC", fixed = TRUE)
+sel[] <- lapply(sel, gsub, pattern = "T_T", replacement = "TT", fixed = TRUE)
+sel[] <- lapply(sel, gsub, pattern = "A_C", replacement = "AC", fixed = TRUE)
+sel[] <- lapply(sel, gsub, pattern = "C_A", replacement = "AC", fixed = TRUE)
+sel[] <- lapply(sel, gsub, pattern = "T_G", replacement = "GT", fixed = TRUE)
+sel[] <- lapply(sel, gsub, pattern = "G_T", replacement = "GT", fixed = TRUE)
+sel[] <- lapply(sel, gsub, pattern = "A_T", replacement = "AT", fixed = TRUE)
+sel[] <- lapply(sel, gsub, pattern = "T_A", replacement = "AT", fixed = TRUE)
+sel[] <- lapply(sel, gsub, pattern = "C_G", replacement = "CG", fixed = TRUE)
+sel[] <- lapply(sel, gsub, pattern = "G_C", replacement = "CG", fixed = TRUE)
+
+
+#Prior the transformation you should exchange 00 or --- to NA with something lik
+sel[ sel == 00 ] <- NA
+sel[ sel == "--" ] <- NA
+#Use the additive function and apply to create a numerical variable.
+
+mydatnum <-apply(sel,2,additive)
+write.csv(mydatnum, file=paste0('snptran', i, '.csv'))
+}
+

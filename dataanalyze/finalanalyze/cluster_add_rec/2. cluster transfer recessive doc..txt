@@ -1,0 +1,8 @@
+dataselectmerge<-fread("C:/Users/user/Desktop/BDA/dataselectmergetran.csv",header=T,sep=",")
+require(data.table)
+setDT(dataselectmerge)
+for (jj in 1:ncol(dataselectmerge)) set(dataselectmerge, 
+i = which(dataselectmerge[[jj]]=="0"), j = jj, v = 1)
+setDF(dataselectmerge)
+
+write.csv(dataselectmerge,"datarecessive.csv")

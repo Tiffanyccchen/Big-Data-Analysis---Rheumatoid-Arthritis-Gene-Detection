@@ -1,0 +1,325 @@
+datafirst9<-fread("C:/Users/user/Desktop/BDA/data/naracvarsplit/datafirst9.csv",header=T,sep=",",na.strings="?")
+dataselectmerge<-fread("C:/Users/user/Desktop/BDA/data/dataselectmerge.csv",header=T,sep=",")
+
+rm(list=ls())
+gc()
+setDF(dataselectmerge)
+dataselectmerge<-dataselectmerge[,-c(1:9)]
+
+#split data(10000snps/each)-------------------
+
+433188/2000
+2000*216
+for(i in 2:216){
+aa<-dataselectmerge[,c(sample(1:(433188-2000*(i-1)),2000))]
+write.csv(aa, file=paste0('snp.', i, '.csv'))
+dataselectmerge<-dataselectmerge[,-c(sample(1:(433188-2000*(i-1)),2000))]
+}
+dim(dataselectmerge)
+write.csv(dataselectmerge, file=paste0('snp.', 217, '.csv'))
+
+
+#read 44 10000snps dataset---------------------------------------
+
+# set working directory
+setwd("C:/Users/user/Desktop")
+rm(list=ls())
+ 
+# list all csv files from the current directory
+list.files(pattern=".csv$") # use the pattern argument to define a common pattern  for import files with regex. Here: .csv
+ 
+# create a list from these files
+list.filenames<-list.files(pattern=".csv$")
+ 
+# create an empty list that will serve as a container to receive the incoming files
+list.data<-list()
+ 
+# create a loop to read in your data
+require(data.table)
+for (i in 1:length(list.filenames)){
+gc()
+list.data[[i]]<-fread(list.filenames[i])
+}
+gc()
+
+
+#analyze-------------------------------------------------------
+for(i in 1:44){
+gc()
+df1<-list.data[i]
+df1<-as.data.frame(df1)
+df1<-df1[,-c(1)]
+
+df1<-cbind(datafirst9$Affection,df1)
+df1[] <- lapply( df1, factor) # the "[]" keeps the dataframe structure
+ col_names <- names(df1)
+colnames(df1)[1] <- "Affection"
+assign(paste("df",i,sep=""),df1)
+
+gc()
+#start small, and scale up slowly
+a<-lapply( paste('df', i, sep=''), get )
+a<-data.frame(a)
+gc()
+rf=randomForest(Affection ~ . , data =a,importane = T,proximity = T,ntree=1000)
+assign(paste("rf",i,sep=""), rf)
+
+nam4 <- paste("rn", i, sep = "")
+assign(nam4,
+round(importance(rf), 2)[order(round(importance(rf), 2)[,1], decreasing=TRUE),][1:100])
+
+gc()
+dd<-sapply( paste0('rn', i, sep=''), get )
+b<-names(dd[,1])
+b<-as.vector(b)
+a<-subset(a, select=b)
+dim(a)
+gc()
+write.csv(a, file=paste0(i,'sel' , '.csv'))
+}
+
+
+
+#plot-------------------------------------------------------------
+gc()
+sample(1:44,4) 
+plot(rf7,main="sample.1 10000 snps set")
+layout(matrix(c(1,2),nrow=1),
+       width=c(4,1)) 
+plot(rf7,log="y",main="sample.1 10000 snps set")
+par(mar=c(5,4,4,0)) #No margin on the right side
+par(mar=c(5,0,4,2)) #No margin on the left side
+plot(c(0,1),type="n", axes=F, xlab="", ylab="")
+legend("top", colnames(rf7$err.rate),col=1:4,cex=0.8,fill=1:4)
+varImpPlot(rf7,type=2,main="Variable Importance sample.1 10000 snps")
+
+#read 44 files of first 100 snps--------------------------------------------------
+# set working directory
+setwd("C:/Users/user/Desktop")
+ 
+# list all csv files from the current directory
+list.files(pattern=".csv$") # use the pattern argument to define a common pattern  for import files with regex. Here: .csv
+ 
+# create a list from these files
+list.filenames<-list.files(pattern=".csv$")
+list.filenames
+ 
+# create an empty list that will serve as a container to receive the incoming files
+list.data<-list()
+ 
+# create a loop to read in your data
+for (i in 1:length(list.filenames)){
+list.data[[i]]<-fread(list.filenames[i])
+}
+summary(list.data)
+
+#convert into dataframe-----------------------------------------
+
+for(i in 1:44){
+gc()
+df<-list.data[i]
+df<-as.data.frame(df)
+assign(paste("df",i,sep=""),df)
+}
+dim(df1)
+
+
+#merge data---------------------------------------------------
+select<-as.matrix(rep(1,2062),ncol=1)
+select<-data.frame(select)
+dim(select)
+for(i in 1:44){
+a<-lapply( paste('df', i, sep=''), get )
+a<-data.frame(a)
+a<-a[,-1]
+select<-cbind(select,a)
+}
+select<-select[,-1]
+dim(select)
+select<-data.frame(select)
+str(select)
+
+#remove duplicate columns-------------------------------------
+ss<-select[ -grep( "\\.", names(select))]
+write.csv(ss,"selectsnps.csv")
+dim(ss)
+select<-ss
+
+selectsnps<-cbind(datafirst9$Affection,select)
+selectsnps[] <- lapply( selectsnps, factor) # the "[]" keeps the dataframe structure
+ col_names <- names(selectsnps)
+colnames(selectsnps)[1] <- "Affection"
+
+gc()
+#random forest analyze----------------------------------------
+require(randomForest)
+rf=randomForest(Affection ~ . , data =selectsnps,importane = T,do.trace=200,proximity = T,ntree=1000)
+rf
+
+
+#plot---------------------------------------------------------
+plot(rf,main="selected snps set")
+
+layout(matrix(c(1,2),nrow=1),
+       width=c(4,1)) 
+par(mar=c(5,4,4,0)) #No margin on the right side
+plot(rf, log="y",main="selected snps set")
+par(mar=c(5,0,4,2)) #No margin on the left side
+plot(c(0,1),type="n", axes=F, xlab="", ylab="")
+legend("top", colnames(rf$err.rate),col=1:4,cex=0.8,fill=1:4)
+
+varImpPlot(rf,type=2,main="Variable Importance selectedsnps")
+
+
+
+#choose variable num.plot-------------------------------------------------------------
+result <- replicate(50, rfcv(selectsnps[,-c(1)],selectsnps[,1], 
+cv.fold=5, scale="log", step=0.5, recursive=FALSE), simplify=FALSE)
+error.cv <- sapply(result, "[[", "error.cv")
+
+matplot(result[[1]]$n.var,rowMeans(error.cv), type="o",
+lwd=c(2, rep(1, ncol(error.cv))), col=1, lty=1, log="x",
+ xlab="Number of snps", ylab="CV Error",main="select vars/wrapper var. selection",xaxt="n",ylim=c(0,0.4))
+axis(side=1, at=c(4387,2194,1097,548,274,137,69,34,17,9,4,2,1))
+
+result[[50]]$error.cv
+cvselect<-rep(1,13)
+for(i in 1:50){
+cvselect<-cbind(cvselect,result[[i]]$error.cv)
+}
+dim(cvselect)
+cvselect<-data.frame(cvselect)
+cvselect<-cvselect[,-c(1)]
+write.csv(cvselect,"cvselectrow.csv")
+cv.select<-fread("C:/Users/user/Desktop/cvselect.csv",header=T,sep=",")
+cv.select[,1]
+
+cv.selectrow<-fread("C:/Users/user/Desktop/cvselectrow.csv",header=T,sep=",")
+try<- rev(cv.selectrow)
+
+# Boxplot of cv----------------------------------------------
+selectvarplot<-boxplot(try, main="snps select by cv.error /50 times each var.num.(wrapper method)", 
+  	xlab="Number of snps", ylab="Error Rate",ylim=c(0.2,0.35))
+
+
+#select first 137 snps plot---------------------------------------------------------
+rf=randomForest(Affection ~ . , data =selectsnps,importane = T,do.trace=1000,proximity = T,ntree=5000)
+rf
+
+plot(rf,main="")
+
+layout(matrix(c(1,2),nrow=1),
+       width=c(4,1)) 
+par(mar=c(5,4,4,0)) #No margin on the right side
+plot(rf, log="y",main="selected 4400 snps set")
+par(mar=c(5,0,4,2)) #No margin on the left side
+plot(c(0,1),type="n", axes=F, xlab="", ylab="")
+legend("top", colnames(rf$err.rate),col=1:4,cex=0.8,fill=1:4)
+
+varImpPlot(rf,type=2,main="Variable Importance selected 4400 snps set")
+
+rn <- round(importance(rf), 2)
+snpss<-rn[order(rn[,1], decreasing=T),][1:137]
+str(snpss)
+rn[1]
+name137<-names(snpss)
+name137<-as.vector(name137)
+str(name137)
+select137<-selectsnps[ , which(names(selectsnps) %in% name137)]
+select137<-setDF(select137)
+dim(select137)
+write.csv(select137,"select137.csv")
+
+#RF,TREE 137 snps-------
+##RF--------------------------------------------
+train<-sample(1:2062,1650)
+train<-as.vector(train)
+str(train)
+select137<-cbind(datafirst9$Affection,select137)
+select137[] <- lapply( select137, factor) # the "[]" keeps the dataframe structure
+ col_names <- names(select137)
+colnames(select137)[1] <- "Affection"
+str(select137)
+ 
+select137train<-select137[c(train),]
+dim(select137train)
+select137train<-as.vector(
+select137train[] <- lapply( select137train, factor) # the "[]" keeps the dataframe structure
+ col_names <- names(select137train)
+colnames(select137train)[1] <- "Affection"
+select137test<-select137[-c(train),]
+
+rf137=randomForest(Affection ~ . , data =select137,subset=train,importane = T,do.trace=1000,proximity = T,ntree=5000)
+rf137
+
+plot(rf137,main="select 137 snps set")
+
+layout(matrix(c(1,2),nrow=1),
+       width=c(4,1)) 
+par(mar=c(5,4,4,0)) #No margin on the right side
+plot(rf137, log="y",main="select 137 snps set")
+par(mar=c(5,0,4,2)) #No margin on the left side
+plot(c(0,1),type="n", axes=F, xlab="", ylab="")
+legend("top", colnames(rf137$err.rate),col=1:4,cex=0.8,fill=1:4)
+
+varImpPlot(rf137,type=2,main="Variable Importance selected 137 snps set")
+
+prediction <- predict(rf137,select137test)      
+
+table<-table(select137test$Affection, prediction, dnn = c('Actual Group','Predicted Group'))
+select137test$rightPred <- prediction ==select137test$Affection   
+accuracy <- sum(select137test$rightPred)/nrow(select137test)
+diag(prop.table(table, 1))
+
+#decision tree---------------------------------------------------------
+install.packages("tree")
+library(tree)
+require(rpart)
+tree<-tree(Affection~.,select137train)
+dim(select137train)
+summary(tree)
+
+plot(tree)
+text(tree,pretty=0)
+
+tree.1p<-predict(tree,select137test,type="class")
+
+table<-table(select137test$Affection,tree.1p, dnn = c('Actual Group','Predicted Group'))
+select137test$rightPred <- prediction ==select137test$Affection   
+accuracy <- sum(select137test$rightPred)/nrow(select137test)
+diag(prop.table(table, 1))
+sum(diag(table))/sum(table)
+
+#compare 137 snps at random--------------------------------------------
+
+sample<-sample(10:433197,137)
+random<-dataselectmerge[,c(sample(10:433197,137))]
+dim(random)
+random137<-cbind(datafirst9$Affection,random)
+dim(random137)
+random137[] <- lapply( random137, factor) # the "[]" keeps the dataframe structure
+ col_names <- names(random137)
+colnames(random137)[1] <- "Affection"
+rfrandom=randomForest(Affection ~ . , data =random137,importane = T,do.trace=1000,proximity = T,ntree=5000)
+rfrandom
+
+plot(rfranodm,main="select 137 random snps set")
+
+layout(matrix(c(1,2),nrow=1),
+       width=c(4,1)) 
+par(mar=c(5,4,4,0)) #No margin on the right side
+plot(rfrandom, log="y",main="select 137 random snps set")
+par(mar=c(5,0,4,2)) #No margin on the left side
+plot(c(0,1),type="n", axes=F, xlab="", ylab="")
+legend("top", colnames(rfrandom$err.rate),col=1:4,cex=0.8,fill=1:4)
+
+varImpPlot(rfrandom,type=2,main="Variable Importance selected 137 random snps set")
+
+prediction <- predict(rfrandom,select137test)      
+
+table<-table(select137test$Affection, prediction, dnn = c('Actual Group','Predicted Group'))
+select137test$rightPred <- prediction ==select137test$Affection   
+accuracy <- sum(select137test$rightPred)/nrow(select137test)
+diag(prop.table(table, 1))
+
+

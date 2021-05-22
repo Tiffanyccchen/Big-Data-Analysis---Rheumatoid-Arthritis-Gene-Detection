@@ -1,0 +1,52 @@
+data <- read.table("C://Users/user/Desktop/BDA/dataanalyze/final analyze and/recessive10000.csv",sep=",",header=T, col.names = c("num", "snp"))
+a<-data[,2]
+a<-a[1:4400]
+a<-as.vector(a)
+a<-a[-4]
+a
+require(data.table)
+datarecessive<-fread("C:/Users/user/Desktop/BDA/dataanalyze/final analyze and/datarecessive.csv",header=T,sep=",")
+datarecessive<-datarecessive[,-c(1,2)]
+datare4400<-subset(datarecessive,select=c(a))
+dim(datare4400)
+str(datare4400)
+names(datare4400)
+write.csv(datare4400,"datare4400.csv")
+data <- read.csv("C://Users/user/Desktop/datare4400.csv",sep=",",header=T)
+
+#analyze--------------------------------------------
+require(randomForest)
+datafirst9<-fread("C:/Users/user/Desktop/BDA/data/naracvarsplit/datafirst9.csv",header=T,sep=",")
+data<-cbind(datafirst9$Affection,data)
+str(data)
+data<-data[,-2]
+data[] <- lapply( data, factor) # the "[]" keeps the dataframe structure
+ col_names <- names(data)
+colnames(data)[1] <- "Affection"
+str(data)
+
+rf4400
+
+rf4400<-randomForest(Affection~.,data=data,importance=T,proximity=T,do.trace=200,ntree=1000,na.action=na.roughfix)
+
+plot(rf4400,main="")
+
+layout(matrix(c(1,2),nrow=1),
+       width=c(4,1)) 
+par(mar=c(5,4,4,0)) #No margin on the right side
+plot(rf4400, log="y",main="all selected 4400 recessive snps set")
+par(mar=c(5,0,4,2)) #No margin on the left side
+plot(c(0,1),type="n", axes=F, xlab="", ylab="")
+legend("top", colnames(rf4400$err.rate),col=1:4,cex=0.8,fill=1:4)
+
+varImpPlot(rf4400,type=2,main="Variable Importance all selected 4400 recessive snps set")
+
+rf4400.1<-randomForest(Affection~.,data=data,importance=T,proximity=T,do.trace=1000,ntree=1000,na.action=na.roughfix)
+rf4400.2<-randomForest(Affection~.,data=data,importance=T,proximity=T,do.trace=1000,ntree=1000,na.action=na.roughfix)
+rf4400.3<-randomForest(Affection~.,data=data,importance=T,proximity=T,do.trace=1000,ntree=1000,na.action=na.roughfix)
+rf4400.4<-randomForest(Affection~.,data=data,importance=T,proximity=T,do.trace=1000,ntree=1000,na.action=na.roughfix)
+
+(19.59+19.98+19.74+19.93+20.08)/5
+(11.3+12.23+11.31+12.31+12.23)/5
+(30.8+30.65+31.34+30.41+30.88)/5
+

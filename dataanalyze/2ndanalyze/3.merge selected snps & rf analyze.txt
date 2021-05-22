@@ -1,0 +1,109 @@
+#my path
+
+setwd("C:/Users/user/Desktop")
+
+ 
+# list all csv files from the current directory
+list.files(pattern=".csv$") # use the pattern argument to define a common pattern  for import files with regex. Here: .csv
+ 
+# create a list from these files
+list.filenames<-list.files(pattern=".csv$")
+ 
+# create an empty list that will serve as a container to receive the incoming files
+list.data<-list()
+ 
+# create a loop to read in your data
+require(data.table)
+for (i in 1:length(list.filenames)){
+gc()
+list.data[[i]]<-fread(list.filenames[i])
+}
+
+
+gc()
+#convert into dataframe-----------------------------------------
+
+for(i in 1:44){
+gc()
+df<-list.data[i]
+df<-as.data.frame(df)
+assign(paste("df",i,sep=""),df)
+}
+dim(df1)
+
+
+#merge data---------------------------------------------------
+select<-as.matrix(rep(1,2062),ncol=1)
+select<-data.frame(select)
+dim(select)
+for(i in 1:44){
+a<-lapply( paste('df', i, sep=''), get )
+a<-data.frame(a)
+a<-a[,-1]
+select<-cbind(select,a)
+}
+select<-select[,-1]
+dim(select)
+select<-data.frame(select)
+str(select)
+
+#remove duplicate columns-------------------------------------
+ss<-select[ -grep( "\\.", names(select))]
+write.csv(ss,"selectsnps.csv")
+dim(ss)
+select<-ss
+
+selectsnps<-cbind(datafirst9$Affection,select)
+selectsnps[] <- lapply( selectsnps, factor) # the "[]" keeps the dataframe structure
+ col_names <- names(selectsnps)
+colnames(selectsnps)[1] <- "Affection"
+
+gc()
+#random forest analyze----------------------------------------
+require(randomForest)
+rf=randomForest(Affection ~ . , data =selectsnps,importane = T,do.trace=200,proximity = T,ntree=1000)
+rf
+
+
+#plot---------------------------------------------------------
+plot(rf,main="selected snps set(1st 20% delete)")
+
+layout(matrix(c(1,2),nrow=1),
+       width=c(4,1)) 
+par(mar=c(5,4,4,0)) #No margin on the right side
+plot(rf, log="y",main="selected snps set(1st 20% delete)")
+par(mar=c(5,0,4,2)) #No margin on the left side
+plot(c(0,1),type="n", axes=F, xlab="", ylab="")
+legend("top", colnames(rf$err.rate),col=1:4,cex=0.8,fill=1:4)
+
+varImpPlot(rf,type=2,main="Variable Importance selected(1st 20% delete) snps")
+
+#1st delete20% snps----------------------------------------------------------------
+
+rn <- round(importance(rf), 2)
+rn1.20<-rn[order(rn[,1], decreasing=T),][1:76]
+str(rn1.20)
+rn[1]
+de1.20<-names(rn1.20)
+de1.20<-as.vector(de1.20)
+str(de1.20)
+de1.20<-as.vector(de1.20)
+select1.20<-selectsnps[ , -which(names(selectsnps) %in% de1.20)]
+dim(select1.20)
+
+selecttest<-selectsnps[ , which(names(selectsnps) %in% de1.20)]
+dim(selecttest)
+plot(rftest,main="selected snps set(1st 20% delete)")
+
+layout(matrix(c(1,2),nrow=1),
+       width=c(4,1)) 
+par(mar=c(5,4,4,0)) #No margin on the right side
+plot(rftest, log="y",main="selected snps set(1st 20% delete)")
+par(mar=c(5,0,4,2)) #No margin on the left side
+plot(c(0,1),type="n", axes=F, xlab="", ylab="")
+legend("top", colnames(rftest$err.rate),col=1:4,cex=0.8,fill=1:4)
+
+varImpPlot(rftest,type=2,main="Variable Importance selected(1st 20% delete) snps")
+
+
+

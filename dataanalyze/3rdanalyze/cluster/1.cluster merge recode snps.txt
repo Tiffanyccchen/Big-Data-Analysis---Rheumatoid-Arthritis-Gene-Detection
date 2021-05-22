@@ -1,0 +1,54 @@
+#my path
+
+setwd("C:/Users/user/Desktop")
+
+ 
+# list all csv files from the current directory
+list.files(pattern=".csv$") # use the pattern argument to define a common pattern  for import files with regex. Here: .csv
+ 
+# create a list from these files
+list.filenames<-list.files(pattern=".csv$")
+ 
+# create an empty list that will serve as a container to receive the incoming files
+list.data<-list()
+ 
+# create a loop to read in your data
+require(data.table)
+for (i in 1:length(list.filenames)){
+gc()
+list.data[[i]]<-fread(list.filenames[i])
+}
+
+
+gc()
+#convert into dataframe-----------------------------------------
+
+for(i in 1:44){
+gc()
+df<-list.data[i]
+df<-as.data.frame(df)
+assign(paste("df",i,sep=""),df)
+}
+dim(df1)
+
+
+#merge data---------------------------------------------------
+select<-as.matrix(rep(1,2062),ncol=1)
+select<-data.frame(select)
+dim(select)
+for(i in 1:44){
+a<-lapply( paste('df', i, sep=''), get )
+a<-data.frame(a)
+a<-a[,-c(1,2)]
+select<-cbind(select,a)
+}
+select<-select[,-1]
+dim(select)
+select<-data.frame(select)
+str(select)
+
+#remove duplicate columns-------------------------------------
+ss <- select[, !duplicated(colnames(select))]
+dim(ss)
+write.csv(ss,"dataselectmergetran.csv")
+select<-ss

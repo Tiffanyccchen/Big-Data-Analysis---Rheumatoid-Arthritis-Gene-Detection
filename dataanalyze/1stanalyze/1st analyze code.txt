@@ -1,0 +1,300 @@
+require(data.table)
+data<-fread("C:/Users/user/Desktop/BDA/data/narac.csv",header=T,sep=",",na.strings=c("?_?","NA"))
+
+#分成6份檔案-----------------------------------------------------
+datafirst9<-fread("C:/Users/user/Desktop/BDA/data/naracvarsplit/datafirst9.csv",header=T,sep=",",na.strings="?")
+datamitoselect<-fread("C:/Users/user/Desktop/BDA/data/selectedmito.csv",header=T,sep=",",na.strings="?_?")
+datasnp1<-fread("C:/Users/user/Desktop/BDA/data/datasnp1.csv",header=T,sep=",",na.strings="?_?")
+datasnp2<-fread("C:/Users/user/Desktop/BDA/data/datasnp2.csv",header=T,sep=",",na.strings="?_?")
+datasnp3<-fread("C:/Users/user/Desktop/BDA/data/datasnp3.csv",header=T,sep=",",na.strings="?_?")
+datasnp4<-fread("C:/Users/user/Desktop/BDA/data/datasnp4.csv",header=T,sep=",",na.strings="?_?")
+datasnp5<-fread("C:/Users/user/Desktop/BDA/data/datasnp5.csv",header=T,sep=",",na.strings="?_?")
+datasnp6<-fread("C:/Users/user/Desktop/BDA/data/datasnp6.csv",header=T,sep=",",na.strings="?_?")
+dataselectmerge<-fread("C:/Users/user/Desktop/BDA/data/dataselectmerge.csv",header=T,sep=",")
+datatest<-fread("C:/Users/user/Desktop/BDA/data/datatest.csv",header=T,sep=",")
+
+#若需抽樣-----------------------------------------------------
+sample<-sample(1:2062,50)
+sample<-as.vetor(sample)
+datatest<-subset(dataselectmerge,select=c(sample))
+fwrite(datatest,"datatest.csv")
+dim(datatest)
+datafirst9<-datafirst9[,2:7]
+dim(datafirst9)
+
+##---------------------用Loci試試-----------------
+source("http://bioconductor.org/biocLite.R")
+biocLite("snpStats")
+biocLite("SNPRelate")
+biocLite("rtracklayer")
+biocLite("biomaRt")
+install.packages(c("plyr","genABEL","LDheatmap","doParallel","ggplot2","coin","igraph","devtools")
+
+##刪除missing超過1#snps-------------------------
+
+dim(data1)
+a1<-which((colSums(is.na(data1[,1:99991]))/2062)>0.01)
+length(a1)
+a1[1:10]
+
+colSums(is.na(data1[,90000:91000]))/2062
+
+data1<-subset(data1,select=-c(a1))
+dim(data1)
+
+dim(data2)
+a2<-which((colSums(is.na(data2[,1:100000]))/2062)>0.01)
+length(a2)
+a2[1:10]
+
+colSums(is.na(data2[,90000:91000]))/2062
+
+data2<-subset(data2,select=-c(a2))
+dim(data2)
+
+dim(data3)
+a3<-which((colSums(is.na(data3[,1:100000]))/2062)>0.01)
+length(a3)
+a3[1:10]
+
+colSums(is.na(data3[,90000:91000]))/2062
+
+data3<-subset(data3,select=-c(a3))
+dim(data3)
+
+dim(data4)
+a4<-which((colSums(is.na(data4[,1:100000]))/2062)>0.01)
+length(a4)
+a4[1:10]
+
+colSums(is.na(data4[,90000:91000]))/2062
+
+data4<-subset(data4,select=-c(a4))
+dim(data4)
+
+dim(data5)
+a5<-which((colSums(is.na(data5[,1:100000]))/2062)>0.01)
+length(a5)
+a5[1:10]
+
+colSums(is.na(data5[,90000:91000]))/2062
+
+data5<-subset(data5,select=-c(a5))
+dim(data5)
+
+dim(data6)
+a6<-which((colSums(is.na(data6[,1:44927]))/2062)>0.01)
+length(a6)
+a6[1:10]
+
+colSums(is.na(data6[,90000:91000]))/2062
+
+data6<-subset(data6,select=-c(a6))
+dim(data6)
+
+
+
+#刪除變異<5%snps-------------------------------
+
+
+charv <- c("o","it","the","it","it")
+length(which(charv=="it"))
+length(charv)
+result <- getmode(charv)
+print(result)
+
+getmode <- function(v) {
+   uniqv <- unique(v)
+   a<-uniqv[which.max(tabulate(match(v, uniqv)))]
+length(which(v==a))
+}
+
+variation<-apply(data1,2,getmode)
+length(variation)
+b1<-which(variation/2062>0.95)
+data1<-subset(data1,select=-c(b1))
+dim(data1)
+
+variation2<-apply(data2,2,getmode)
+length(variation2)
+b2<-which(variation2/2062>0.95)
+length(b2)
+data2<-subset(data2,select=-c(b2))
+dim(data2)
+
+variation3<-apply(data3,2,getmode)
+length(variation3)
+b3<-which(variation3/2062>0.95)
+length(b3)
+data3<-subset(data3,select=-c(b3))
+dim(data3)
+
+variation4<-apply(data4,2,getmode)
+length(variation4)
+b4<-which(variation4/2062>0.95)
+length(b4)
+data4<-subset(data4,select=-c(b4))
+dim(data4)
+
+variation5<-apply(data5,2,getmode)
+length(variation5)
+b5<-which(variation5/2062>0.95)
+length(b5)
+data5<-subset(data5,select=-c(b5))
+dim(data5)
+
+variation6<-apply(data6,2,getmode)
+length(variation6)
+b6<-which(variation6/2062>0.95)
+length(b6)
+data6<-subset(data6,select=-c(b6))
+dim(data6)
+
+
+
+#輸出------------------------------------------
+data1snp<-fwrite(data1,"datasnp1.csv")
+dim(datasnp1)
+data2snp<-fwrite(data2,"datasnp2.csv")
+dim(datasnp2)
+data3snp<-fwrite(data3,"datasnp3.csv")
+dim(datasnp3)
+data4snp<-fwrite(data4,"datasnp4.csv")
+dim(datasnp4)
+data5snp<-fwrite(data5,"datasnp5.csv")
+dim(datasnp5)
+data6snp<-fwrite(data6,"datasnp6.csv")
+dim(datasnp6)
+78461+78692+78539+78120+84224+35077+75+1
+
+#merge all selected data--------------------------------
+library("dplyr")
+datasmall<-bind_cols(datafirst9,datatest,datamitoselect)
+dim(datasmall)
+dim(datamitoselect)
+dim(datafirst9)
+
+datasmall[] <- lapply( datasmall, factor) # the "[]" keeps the dataframe structure
+ col_names <- names(datasmall)
+
+
+
+#impute missing value(mice)-------------------
+install.packages("Amelia")
+install.packages("mice")
+install.packages("ggplot2")
+install.packages("lattice")
+
+library(Amelia)
+library(mice)
+library(ggplot2)
+library(lattice)
+
+
+missmap(datafirst9, col=c('grey', 'steelblue'), y.cex=0.5, x.cex=0.8)
+missmap(datamitoselect, col=c('grey', 'steelblue'), y.cex=0.5, x.cex=0.8)
+
+missmap(datasmall, col=c('grey', 'steelblue'), y.cex=0.5, x.cex=0.8)
+
+install.packages("DMwR")
+
+require(DMwR)
+dataimpute <- knnImputation(datasmall)
+dim(datasmall)
+
+ md.pattern(datasmall)
+mice.data <- mice(datasmall,
+                  m = 1,           # 產生三個被填補好的資料表
+                  method="cart",# 使用CART決策樹，進行遺漏值預測
+                  seed = 188)      # set.seed()，令抽樣每次都一樣
+
+# 原始資料(有遺漏值)
+
+dataimpute<- complete(mice.data, 1)
+dim(dataimpute)
+dataimpute[,6]
+
+table(dataimpute$SENum)
+table(datafirst9$SENum)
+missmap(dataimpute, col=c('grey', 'steelblue'), y.cex=0.5, x.cex=0.8)
+
+#Confirm no NAs
+sum(sapply(dataimpute, function(x) { sum(is.na(x)) }))
+
+fwrite(dataimpute,"datatestimpute.csv")
+
+#---analyze----------------------------------
+
+require(randomForest)
+
+#split data in X and y manually
+train<-sample(1:2062,1000)
+
+y = dataimpute$Affection
+y<-data.frame(y)
+X = dataimpute[,-c(1,3,4)]
+gc()
+dim(dataimpute)
+dataimpute1<-dataimpute[,-c(3,4)]
+dim(X)
+object.size(X) #38Mb, no problemo
+
+#if you were using formula interface
+#output.forest <- randomForest(dati$Clip_pm25 ~ dati$e_1 + dati$Clipped_so + dati$Clip_no2 + dati$t2m_1 + dati$tp_1 + dati$Clipped_nh  +  dati$Clipped_co + dati$Clipped_o3 + dati$ssrd_1 + dati$Clipped_no + dati$Clip_pm10 + dati$sp_1, data=trainSet, ntree=250)
+#output.forest <- randomForest(dati$Clip_pm25 ~ ., ntree=250) # use dot to indicate all variables
+
+dim(trainmerge1)
+
+#start small, and scale up slowly
+rf=randomForest(Affection ~ . , data = dataimpute1 , subset = train,importane = T,proximity = T, do.trace = 100)
+
+
+#我用的
+rf = randomForest(X,y,sampsize=1500,ntree=1000) #runtime ~15 seconds
+print(rf) #~67% explained var
+plot(rf)
+layout(matrix(c(1,2),nrow=1),
+       width=c(4,1)) 
+par(mar=c(5,4,4,0)) #No margin on the right side
+plot(rf, log="y")
+par(mar=c(5,0,4,2)) #No margin on the left side
+plot(c(0,1),type="n", axes=F, xlab="", ylab="")
+legend("top", colnames(rf$err.rate),col=1:4,cex=0.8,fill=1:4)
+
+sort((round(importance(rf),2)),decreasing=T)
+
+getTree(rfobj, k=1, labelVar=FALSE)
+
+
+#(4)建立混淆矩陣(confusion matrix)觀察模型表現
+cm <- table(testdata$card, result_Approved, dnn = c("實際", "預測"))
+cm
+
+#(5)正確率
+#計算核準卡正確率
+cm[4] / sum(cm[, 2])
+
+#計算拒補件正確率
+cm[1] / sum(cm[, 1])
+
+#整體準確率(取出對角/總數)
+accuracy <- sum(diag(cm)) / sum(cm)
+accuracy
+
+
+#plottree-------------------------------------
+
+options(repos='http://cran.rstudio.org')
+have.packages <- installed.packages()
+cran.packages <- c('devtools','plotrix','randomForest','tree')
+to.install <- setdiff(cran.packages, have.packages[,1])
+if(length(to.install)>0) install.packages(to.install)
+
+library(devtools)
+if(!('reprtree' %in% installed.packages())){
+  install_github('araastat/reprtree')
+}
+for(p in c(cran.packages, 'reprtree')) eval(substitute(library(pkg), list(pkg=p)))
+library(reprtree)
+reprtree:::plot.getTree(rf)
+

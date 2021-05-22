@@ -1,0 +1,271 @@
+
+R version 3.2.3 (2015-12-10) -- "Wooden Christmas-Tree"
+Copyright (C) 2015 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+[Previously saved workspace restored]
+
+> require(ranger)
+Loading required package: ranger
+> require(data.table)
+Loading required package: data.table
+> dataselectmerge<-fread("/home/team3/dataselectmergetran.csv",header=T,sep=",")
+
+Read 0.0% of 2062 rows
+Read 2062 rows and 433189 (of 433189) columns from 1.670 GB file in 00:02:44
+> datafirst9<-fread("/home/team3/datafirst9.csv",header=T,sep=",")
+> 
+> a<-which(names(dataselectmerge)=="Affection1")
+> dataselectmerge<-subset(dataselectmerge,select=-a)
+> dim(dataselectmerge)
+[1]   2062 433188
+> dataselectmerge<-dataselectmerge[,-1]
+> sel<-cbind(datafirst9,dataselectmerge)
+> sel[is.na(sel)] <- "?_?"
+> 
+> sel[] <- lapply( sel, factor) # the "[]" keeps the dataframe structure
+> col_names <- names(sel)
+> colnames(sel)[1] <- "Affection"
+> 
+> 
+> rf=ranger(data=sel,num.trees = 5000,mtry=5000,importance="impurity",write.forest=TRUE,probability=FALSE,min.node.size=1,replace=F,dependent.variable.name="Affection")
+Growing trees.. Progress: 1%. Estimated remaining time: 41 minutes, 49 seconds.
+Growing trees.. Progress: 3%. Estimated remaining time: 39 minutes, 57 seconds.
+Growing trees.. Progress: 4%. Estimated remaining time: 39 minutes, 1 seconds.
+Growing trees.. Progress: 5%. Estimated remaining time: 38 minutes, 17 seconds.
+Growing trees.. Progress: 7%. Estimated remaining time: 37 minutes, 52 seconds.
+Growing trees.. Progress: 8%. Estimated remaining time: 37 minutes, 7 seconds.
+Growing trees.. Progress: 9%. Estimated remaining time: 36 minutes, 21 seconds.
+Growing trees.. Progress: 10%. Estimated remaining time: 35 minutes, 57 seconds.
+Growing trees.. Progress: 12%. Estimated remaining time: 35 minutes, 19 seconds.
+Growing trees.. Progress: 13%. Estimated remaining time: 34 minutes, 45 seconds.
+Growing trees.. Progress: 14%. Estimated remaining time: 34 minutes, 13 seconds.
+Growing trees.. Progress: 16%. Estimated remaining time: 33 minutes, 49 seconds.
+Growing trees.. Progress: 17%. Estimated remaining time: 33 minutes, 19 seconds.
+Growing trees.. Progress: 18%. Estimated remaining time: 32 minutes, 44 seconds.
+Growing trees.. Progress: 20%. Estimated remaining time: 32 minutes, 13 seconds.
+Growing trees.. Progress: 21%. Estimated remaining time: 31 minutes, 39 seconds.
+Growing trees.. Progress: 22%. Estimated remaining time: 31 minutes, 10 seconds.
+Growing trees.. Progress: 24%. Estimated remaining time: 30 minutes, 36 seconds.
+Growing trees.. Progress: 25%. Estimated remaining time: 30 minutes, 5 seconds.
+Growing trees.. Progress: 26%. Estimated remaining time: 29 minutes, 39 seconds.
+Growing trees.. Progress: 27%. Estimated remaining time: 29 minutes, 8 seconds.
+Growing trees.. Progress: 29%. Estimated remaining time: 28 minutes, 33 seconds.
+Growing trees.. Progress: 30%. Estimated remaining time: 28 minutes, 2 seconds.
+Growing trees.. Progress: 31%. Estimated remaining time: 27 minutes, 30 seconds.
+Growing trees.. Progress: 33%. Estimated remaining time: 26 minutes, 57 seconds.
+Growing trees.. Progress: 34%. Estimated remaining time: 26 minutes, 28 seconds.
+Growing trees.. Progress: 35%. Estimated remaining time: 25 minutes, 58 seconds.
+Growing trees.. Progress: 37%. Estimated remaining time: 25 minutes, 25 seconds.
+Growing trees.. Progress: 38%. Estimated remaining time: 24 minutes, 52 seconds.
+Growing trees.. Progress: 39%. Estimated remaining time: 24 minutes, 23 seconds.
+Growing trees.. Progress: 41%. Estimated remaining time: 23 minutes, 51 seconds.
+Growing trees.. Progress: 42%. Estimated remaining time: 23 minutes, 22 seconds.
+Growing trees.. Progress: 43%. Estimated remaining time: 22 minutes, 49 seconds.
+Growing trees.. Progress: 44%. Estimated remaining time: 22 minutes, 16 seconds.
+Growing trees.. Progress: 46%. Estimated remaining time: 21 minutes, 46 seconds.
+Growing trees.. Progress: 47%. Estimated remaining time: 21 minutes, 14 seconds.
+Growing trees.. Progress: 48%. Estimated remaining time: 20 minutes, 43 seconds.
+Growing trees.. Progress: 50%. Estimated remaining time: 20 minutes, 10 seconds.
+Growing trees.. Progress: 51%. Estimated remaining time: 19 minutes, 37 seconds.
+Growing trees.. Progress: 52%. Estimated remaining time: 19 minutes, 7 seconds.
+Growing trees.. Progress: 54%. Estimated remaining time: 18 minutes, 35 seconds.
+Growing trees.. Progress: 55%. Estimated remaining time: 18 minutes, 5 seconds.
+Growing trees.. Progress: 56%. Estimated remaining time: 17 minutes, 33 seconds.
+Growing trees.. Progress: 58%. Estimated remaining time: 17 minutes, 2 seconds.
+Growing trees.. Progress: 59%. Estimated remaining time: 16 minutes, 31 seconds.
+Growing trees.. Progress: 60%. Estimated remaining time: 16 minutes, 0 seconds.
+Growing trees.. Progress: 61%. Estimated remaining time: 15 minutes, 30 seconds.
+Growing trees.. Progress: 63%. Estimated remaining time: 14 minutes, 57 seconds.
+Growing trees.. Progress: 64%. Estimated remaining time: 14 minutes, 26 seconds.
+Growing trees.. Progress: 65%. Estimated remaining time: 13 minutes, 54 seconds.
+Growing trees.. Progress: 67%. Estimated remaining time: 13 minutes, 22 seconds.
+Growing trees.. Progress: 68%. Estimated remaining time: 12 minutes, 52 seconds.
+Growing trees.. Progress: 69%. Estimated remaining time: 12 minutes, 21 seconds.
+Growing trees.. Progress: 71%. Estimated remaining time: 11 minutes, 50 seconds.
+Growing trees.. Progress: 72%. Estimated remaining time: 11 minutes, 19 seconds.
+Growing trees.. Progress: 73%. Estimated remaining time: 10 minutes, 46 seconds.
+Growing trees.. Progress: 74%. Estimated remaining time: 10 minutes, 16 seconds.
+Growing trees.. Progress: 76%. Estimated remaining time: 9 minutes, 45 seconds.
+Growing trees.. Progress: 77%. Estimated remaining time: 9 minutes, 14 seconds.
+Growing trees.. Progress: 78%. Estimated remaining time: 8 minutes, 42 seconds.
+Growing trees.. Progress: 80%. Estimated remaining time: 8 minutes, 9 seconds.
+Growing trees.. Progress: 81%. Estimated remaining time: 7 minutes, 38 seconds.
+Growing trees.. Progress: 82%. Estimated remaining time: 7 minutes, 8 seconds.
+Growing trees.. Progress: 84%. Estimated remaining time: 6 minutes, 34 seconds.
+Growing trees.. Progress: 85%. Estimated remaining time: 6 minutes, 2 seconds.
+Growing trees.. Progress: 86%. Estimated remaining time: 5 minutes, 31 seconds.
+Growing trees.. Progress: 88%. Estimated remaining time: 5 minutes, 0 seconds.
+Growing trees.. Progress: 89%. Estimated remaining time: 4 minutes, 28 seconds.
+Growing trees.. Progress: 90%. Estimated remaining time: 3 minutes, 57 seconds.
+Growing trees.. Progress: 91%. Estimated remaining time: 3 minutes, 26 seconds.
+Growing trees.. Progress: 93%. Estimated remaining time: 2 minutes, 54 seconds.
+Growing trees.. Progress: 94%. Estimated remaining time: 2 minutes, 24 seconds.
+Growing trees.. Progress: 95%. Estimated remaining time: 1 minute, 52 seconds.
+Growing trees.. Progress: 97%. Estimated remaining time: 1 minute, 22 seconds.
+Growing trees.. Progress: 98%. Estimated remaining time: 51 seconds.
+Growing trees.. Progress: 99%. Estimated remaining time: 19 seconds.
+> rf
+Ranger result
+
+Call:
+ ranger(data = sel, num.trees = 5000, mtry = 5000, importance = "impurity",      write.forest = TRUE, probability = FALSE, min.node.size = 1,      replace = F, dependent.variable.name = "Affection") 
+
+Type:                             Classification 
+Number of trees:                  5000 
+Sample size:                      2062 
+Number of independent variables:  433187 
+Mtry:                             5000 
+Target node size:                 1 
+Variable importance mode:         impurity 
+OOB prediction error:             24.01 % 
+> rf$confusion.matrix
+    predicted
+true   0   1
+   0 976 218
+   1 277 591
+> rf$prediction.error
+[1] 0.2400582
+> 
+> #selectfinalvars----------------------------------------------
+> rn<-round(rf$variable.importance,2)
+> dim(rn)
+NULL
+> str(rn)
+ Named num [1:433187] 0 0 0 0 0 0 0 0 0 0 ...
+ - attr(*, "names")= chr [1:433187] "rs6774037" "rs3775003" "rs11079690" "rs4662223" ...
+> rn<-data.frame(as.list(rn))
+> rn.ranger=sort(rn, decreasing=T)[1:10000]
+> str(rn.ranger)
+'data.frame':	1 obs. of  10000 variables:
+ $ rs2395175  : num 6.19
+ $ rs660895   : num 5.37
+ $ rs6910071  : num 4.51
+ $ rs2395163  : num 4.2
+ $ rs3763309  : num 3.78
+ $ rs2395185  : num 2.67
+ $ rs477515   : num 2.58
+ $ rs2516049  : num 2.4
+ $ rs9275595  : num 2.34
+ $ MitoG1440A : num 2.01
+ $ rs9275418  : num 1.91
+ $ rs3817963  : num 1.88
+ $ rs3957148  : num 1.86
+ $ rs4424066  : num 1.77
+ $ rs9275425  : num 1.73
+ $ rs9275424  : num 1.72
+ $ rs9275393  : num 1.71
+ $ rs2076530  : num 1.69
+ $ rs3817973  : num 1.67
+ $ rs9275427  : num 1.65
+ $ rs9275390  : num 1.65
+ $ rs6903608  : num 1.65
+ $ rs9275374  : num 1.64
+ $ rs9275406  : num 1.63
+ $ rs9275439  : num 1.6
+ $ rs9275428  : num 1.57
+ $ rs7745656  : num 1.41
+ $ rs9267873  : num 1.35
+ $ rs2856717  : num 1.35
+ $ rs9275572  : num 1.33
+ $ rs6932542  : num 1.29
+ $ rs9268528  : num 1.27
+ $ rs3129871  : num 1.24
+ $ rs9275312  : num 1.19
+ $ rs9268542  : num 1.13
+ $ rs2858305  : num 1.12
+ $ rs7192     : num 1.09
+ $ rs485774   : num 1.08
+ $ rs2647012  : num 1.07
+ $ rs9268832  : num 1.06
+ $ rs2395173  : num 1.05
+ $ rs2856725  : num 1.04
+ $ rs5000634  : num 1.03
+ $ rs3135363  : num 0.97
+ $ rs9268384  : num 0.96
+ $ rs9267911  : num 0.96
+ $ rs9268615  : num 0.96
+ $ rs412657   : num 0.92
+ $ rs3806156  : num 0.9
+ $ rs532098   : num 0.89
+ $ rs3129941  : num 0.88
+ $ rs547077   : num 0.87
+ $ rs382259   : num 0.83
+ $ rs547261   : num 0.82
+ $ rs3129882  : num 0.82
+ $ rs9268368  : num 0.81
+ $ rs7765379  : num 0.78
+ $ rs9405090  : num 0.77
+ $ rs2070600  : num 0.75
+ $ rs3129763  : num 0.73
+ $ rs9268132  : num 0.72
+ $ rs910049   : num 0.71
+ $ MitoG752A  : num 0.71
+ $ rs9368713  : num 0.67
+ $ rs3819721  : num 0.67
+ $ rs9275614  : num 0.63
+ $ rs3916765  : num 0.61
+ $ rs3873444  : num 0.56
+ $ rs2856705  : num 0.55
+ $ rs7775228  : num 0.53
+ $ rs602875   : num 0.52
+ $ rs2858308  : num 0.5
+ $ rs3117098  : num 0.48
+ $ rs2858870  : num 0.47
+ $ rs2239804  : num 0.39
+ $ rs2849015  : num 0.38
+ $ rs1265759  : num 0.38
+ $ rs404890   : num 0.38
+ $ rs2071295  : num 0.37
+ $ rs2858331  : num 0.36
+ $ rs3129890  : num 0.35
+ $ rs3130320  : num 0.35
+ $ rs7774434  : num 0.34
+ $ rs2395182  : num 0.34
+ $ rs9501626  : num 0.34
+ $ rs1265758  : num 0.33
+ $ rs3117099  : num 0.32
+ $ rs375244   : num 0.31
+ $ rs2074488  : num 0.31
+ $ rs2395150  : num 0.31
+ $ rs3130299  : num 0.3
+ $ rs2261033  : num 0.3
+ $ rs2256175  : num 0.3
+ $ rs2844509  : num 0.3
+ $ rs9391858  : num 0.28
+ $ rs2239689  : num 0.27
+ $ rs9271366  : num 0.26
+ $ rs3135034  : num 0.26
+ $ rs9275141  : num 0.26
+  [list output truncated]
+> dim(rn.ranger)
+[1]     1 10000
+> names.sel=names(rn.ranger)
+> selectranger<-subset(dataselectmerge,select=c(which(names(dataselectmerge) %in% names.sel)))
+> 
+> dim(dataselectmerge)
+[1]   2062 433187
+> dim(selectranger)
+[1]  2062 10000
+> write.csv(rn.ranger,"rnranger1.csv")
+> write.csv(names.sel,"namesel1.csv")
+> write.csv(selectranger,"selectranger1.csv")
+> 
+> proc.time()
+      user     system    elapsed 
+134647.439   2997.255 120816.828 
+

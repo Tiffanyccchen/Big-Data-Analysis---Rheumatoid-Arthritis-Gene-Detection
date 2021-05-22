@@ -1,0 +1,177 @@
+#read 4400 snps by different method(slice,lice recode, cluster 4400)---------------
+require(data.table)
+slice4400<-fread("C:/Users/user/Desktop/BDA/dataanalyze/2nd analyze/slice/selectsnps.csv",header=T,sep=",",na.strings=c("","NA"))
+slicerecode4400<-fread("C:/Users/user/Desktop/BDA/dataanalyze/3rd analyze/recode/selectsnpstran.csv",header=T,sep=",",na.strings="?_?")
+cluster4400<-fread("C:/Users/user/Desktop/all4400.csv",header=T,sep=",",na.strings=c("","NA"))
+datafirst9<-fread("C:/Users/user/Desktop/BDA/data/naracvarsplit/datafirst9.csv",header=T,sep=",",na.strings="?")
+dim(slice4400)
+str(slice4400)
+slice4400<-slice4400[,-c(1,2)]
+dim(slicerecode4400)
+slicerecode4400<-slicerecode4400[,-1]
+str(slicerecode4400)
+dim(cluster4400)
+cluster4400<-cluster4400[,c(2:4401)]
+str(cluster4400)
+
+slice4400<-cbind(datafirst9$Affection,slice4400)
+slice4400[] <- lapply(slice4400, factor) # the "[]" keeps the dataframe structure
+ col_names <- names(slice4400)
+colnames(slice4400)[1] <- "Affection"
+
+slicerecode4400<-cbind(datafirst9$Affection,slicerecode4400)
+slicerecode4400[] <- lapply(slicerecode4400, factor) # the "[]" keeps the dataframe structure
+ col_names <- names(slicerecode4400)
+colnames(slicerecode4400)[1] <- "Affection"
+
+cluster4400<-cbind(datafirst9$Affection,cluster4400)
+cluster4400[] <- lapply(cluster4400, factor) # the "[]" keeps the dataframe structure
+ col_names <- names(cluster4400)
+colnames(cluster4400)[1] <- "Affection"
+
+#plot tree to detect interaction term----------------------------
+require(rpart)
+treeslice4400 <- rpart(formula = Affection ~ ., data =slice4400, method = "class")
+plot(treeslice4400)
+text(treeslice4400,pretty=0)
+plotcp(treeslice4400)
+
+treeslicerecode4400 <- rpart(formula = Affection ~ ., data =slicerecode4400, method = "class")
+plot(treeslicerecode4400)
+text(treeslicerecode4400,pretty=0)
+plotcp(treeslicerecode4400)
+
+treecluster4400 <- rpart(formula = Affection ~ ., data =cluster4400, method = "class")
+plot(treecluster4400)
+text(treecluster4400,pretty=0)
+plotcp(treecluster4400)
+
+Mode <- function(x) {
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
+
+data<-cluster4400
+data<-as.data.frame(data)
+for(i in 1:ncol(data)){
+  data[is.na(data[,i]), i] <- Mode(data[,i])
+}
+str(data)
+#verify interaction term by logistic model------------------------------------------
+fitlogit<-glm(Affection~rs2395175*rs9275595+rs2395175*rs660895+rs9275595*rs2306420+rs660895*rs3129941+rs2306420*rs12758854+rs3129941*rs1376679+rs12758854*rs10817045+rs12758854*rs9369084+rs1376679*rs1561505,family=binomial(link=logit),data=data)
+summary(fitlogit)
+nothing <- glm(Affection~ 1,family=binomial(link=logit),data=data)
+summary(nothing)
+
+forwards <- step(nothing,scope=list(lower=formula(nothing),upper=formula(fitlogit)), direction="forward")
+backwards <-step(fitlogit,trace=0)
+stepwise<-step(nothing, list(lower=formula(nothing),upper=formula(fitlogit)),
+direction="both",trace=0)
+
+formula(forwards)
+formula(backwards)
+formula(stepwise)
+summary(forwards)
+summary(backwards)
+summary(stepwise)
+Affection ~ rs2395175 + rs9275595 + rs660895 + rs2306420 + rs3129941 + 
+    rs12758854 + rs1376679 + rs10817045 + rs9369084 + rs2395175:rs9275595 + 
+    rs2395175:rs660895 + rs3129941:rs1376679 + rs12758854:rs9369084
+
+
+fitlogit1<-glm(Affection ~ rs2395175 + rs9275595 + rs660895 + rs2306420 + rs3129941 + 
+    rs12758854 + rs1376679 + rs10817045 + rs9369084 + rs2395175:rs9275595 + 
+    rs2395175:rs660895 + rs12758854:rs9369084,family=binomial(link=logit),data=data)
+summary(fitlogit1)
+table(data$rs2395175,data$rs660895)
+
+
+library(sjPlot)
+# show plot
+sjp.int(fitlogit1
+, type = "eff", int.term = "rs2395175*rs660895",
+moderatorValues = "meansd", 
+        swapPredictors = T)
+table(data$rs2395175,data$rs660895)
+
+sjp.int(fitlogit1
+, type = "eff", int.term = "rs2395175*rs9275595",
+moderatorValues = "meansd", 
+        swapPredictors = T)
+
+
+sjp.int(fitlogit1
+, type = "eff", int.term = "rs12758854:rs9369084",
+moderatorValues = "meansd", 
+        swapPredictors = T)
+
+datars1<-data[,c("rs2395175","rs660895","Affection")]
+str(datars1)
+datars1$Affection<- as.numeric(as.character(datars1$Affection))
+means<-aggregate(datars1,by=list(data$rs2395175,data$rs660895),mean)
+means.long<-melt(means,id.vars=c("Group.1","Group.2"))
+names(means.long)[1]<-"rs2395175"
+names(means.long)[2]<-"rs660895"
+means.long<-means.long[17:24,c(1,2,4)]
+means.long
+ggplot(means.long,aes(x=rs660895,y=value,fill=factor(rs2395175)))+
+  geom_bar(stat="identity",position="dodge")+
+  scale_fill_discrete(name="rs2395175",
+                      breaks=c("A_A", "A_G","G_G"),
+                      labels=c("A_A", "A_G","G_G"))+
+  xlab("rs660895")+ylab("Percentage of RA")
+
+
+datars1<-data[,c("rs2395175","rs9275595","Affection")]
+str(datars1)
+datars1$Affection<- as.numeric(as.character(datars1$Affection))
+means<-aggregate(datars1,by=list(data$rs2395175,data$rs9275595),mean)
+install.packages("reshape2")
+library("reshape2")
+means.long<-melt(means,id.vars=c("Group.1","Group.2"))
+names(means.long)[1]<-"rs2395175"
+names(means.long)[2]<-"rs9275595"
+means.long<-means.long[19:27,c(1,2,4)]
+means.long
+library(ggplot2)
+ggplot(means.long,aes(x=rs9275595,y=value,fill=factor(rs2395175)))+
+  geom_bar(stat="identity",position="dodge")+
+  scale_fill_discrete(name="rs2395175",
+                      breaks=c("A_A", "A_G","G_G"),
+                      labels=c("A_A", "A_G","G_G"))+
+  xlab("rs9275595")+ylab("Percentage of RA")
+
+datars1<-data[,c("rs12758854","rs9369084","Affection")]
+str(datars1)
+datars1$Affection<- as.numeric(as.character(datars1$Affection))
+means<-aggregate(datars1,by=list(data$rs12758854,data$rs9369084),mean)
+means.long<-melt(means,id.vars=c("Group.1","Group.2"))
+names(means.long)[1]<-"rs12758854"
+names(means.long)[2]<-"rs9369084"
+means.long<-means.long[19:27,c(1,2,4)]
+means.long
+ggplot(means.long,aes(x=rs12758854,y=value,fill=factor(rs9369084)))+
+  geom_bar(stat="identity",position="dodge")+
+  scale_fill_discrete(name="rs9369084",
+                      breaks=c("A_A", "A_G","G_G"),
+                      labels=c("A_A", "A_G","G_G"))+
+  xlab("rs12758854")+ylab("Percentage of RA")
+
+data<-cluster4400
+table(data$Affection,data$rs2395175)
+round(prop.table(table(data$rs2395175,data$Affection),1),2)
+table(data$Affection,data$rs660895)
+round(prop.table(table(data$rs660895,data$Affection),1),2)
+table(data$Affection,data$rs6910071)
+round(prop.table(table(data$rs6910071,data$Affection),1),2)
+table(data$Affection,data$rs2395163)
+round(prop.table(table(data$rs2395163,data$Affection),1),2)
+table(data$Affection,data$rs3763309)
+round(prop.table(table(data$rs3763309,data$Affection),1),2)
+
+218/(976+218)
+277/(277+591)
+210/(210+985)
+(985+594)/2062
+1-0.7657614
+rf4400.2

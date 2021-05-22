@@ -1,0 +1,87 @@
+require(data.table)
+data<-fread("C:/Users/user/Desktop/BDA/datafirst9.csv",header=T,sep=",")
+data1<-fwrite(data[1:500,], "data1.csv")
+data2<-fwrite(data[501:1000,],"data2.csv")
+data3<-fwrite(data[1001:1500,],"data3.csv")
+data4<-fwrite(data[1501:2062,],"data4.csv")
+
+datafirst9<-fwrite(data[,1:9],"datafirst9.csv")
+datars<-fwrite(data[,10:50],"datars.csv")
+datamito<-fwrite(data[,544928:545089],"datamito.csv")
+
+
+
+
+dim(data)
+names<-names(data[,1:9])
+names1to10<-names[1:10]
+view1<-data[15:20,4]
+view1
+
+affection<-data[,2]
+sex<-data[,3]
+Drb1_1<-data[,4]
+Drb1_2<-data[,5]
+SENum<-data[,6]
+SEStatus<-data[,7]
+AntiCCP<-data[,8]
+
+table(affection)
+prop.table(table(affection))
+
+table(sex)
+prop.table(table(sex))
+
+
+crosstablesexaffection<-table(data$Sex,data$Affection)
+prop.table(crosstablesexaffection, margin = 1)
+oddsratio<-(0.5706631*0.3989455)/(0.4293369*0.6010545)
+
+
+summary(Drb1_1)
+table(Drb1_1)
+
+reorder_size <- function(x) {
+        factor(x, levels = names(sort(table(x), decreasing = TRUE)))
+}
+geom_text(stat='bin',aes(label=..count..),vjust=-1)
+
+library(ggplot2)
+pie <- bp + coord_polar("y", start=0)
+pie
+
+summary(Drb1_2)
+table(Drb1_2)
+ggplot(data, aes(x = reorder_size(data$DRB1_2))) +
+        geom_bar() +
+        xlab("DRB1_2") +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+        geom_text(stat='count',aes(label=..count..),vjust=-1)
+
+
+summary(SENum)
+table(SENum)
+summary(SEStatus)
+table(SEStatus)
+summary(AntiCCP)
+table(AntiCCP)
+attach(data)
+ls(AntiCCP)
+data$AntiCCP<-as.numeric(as.character(AntiCCP))
+ggplot(data,aes(x=AntiCCP)) + geom_histogram()+
+ geom_text(stat='count',aes(label=..count..),vjust=-1)
+
+
+
+
+
+crosstablesexaffection<-table(data$SENum,data$Affection)
+prop.table(crosstablesexaffection, margin = 1)
+oddsratio<-(0.5706631*0.3989455)/(0.4293369*0.6010545)
+
+
+
+crosstablesexaffection<-table(data$SEStatus,data$Affection)
+prop.table(crosstablesexaffection, margin = 1)
+oddsratio<-(0.5706631*0.3989455)/(0.4293369*0.6010545)
+

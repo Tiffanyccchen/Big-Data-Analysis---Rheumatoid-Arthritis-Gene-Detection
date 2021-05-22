@@ -1,0 +1,37 @@
+require(ranger)
+require(data.table)
+dataselectmerge<-fread("/home/team3/dataselectmerge.csv",header=T,sep=",")
+
+a<-which(names(dataselectmerge)=="Affection1")
+dataselectmerge<-subset(dataselectmerge,select=-a)
+dim(dataselectmerge)
+dataselectmerge<-dataselectmerge[,-c(1,3,4,5,6,7,8,9)]
+sel<-dataselectmerge
+
+sel[] <- lapply( sel, factor) # the "[]" keeps the dataframe structure
+col_names <- names(sel)
+colnames(sel)[1] <- "Affection"
+
+
+rf=ranger(data=sel,num.trees = 5000,mtry=5000,importance="impurity",write.forest=TRUE,probability=FALSE,min.node.size=1,replace=F,dependent.variable.name="Affection")
+
+rf
+rf$confusion.matrix
+rf$prediction.error
+
+#selectfinalvars----------------------------------------------
+rn<-round(rf$variable.importance,2)
+dim(rn)
+str(rn)
+rn<-data.frame(as.list(rn))
+rn.ranger=sort(rn, decreasing=T)[1:10000]
+str(rn.ranger)
+dim(rn.ranger)
+names.sel=names(rn.ranger)
+selectranger<-subset(dataselectmerge,select=c(which(names(dataselectmerge) %in% names.sel)))
+
+dim(dataselectmerge)
+dim(selectranger)
+write.csv(rn.ranger,"rnranger")
+write.csv(names.sel,"namesel")
+write.csv(selectranger,"selectranger")

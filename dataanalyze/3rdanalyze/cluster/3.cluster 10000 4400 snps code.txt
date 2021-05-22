@@ -1,0 +1,68 @@
+data <- read.table("C://Users/user/Desktop/cluname10000.txt",sep=",",header=T, col.names = c("num", "snp"))
+a<-data[,2]
+a<-as.vector(a)
+require(data.table)
+dataselectmerge<-fread("C:/Users/user/Desktop/BDA/data/dataselectmerge.csv",header=T,sep=",")
+data10000<-subset(dataselectmerge,select=c(a))
+dim(data10000)
+data10000[,1]
+write.csv(data10000,"clster10000.csv")
+data <- read.csv("C://Users/user/Desktop/clster10000.csv",sep=",",header=T,na.strings=c(""))
+
+#analyze--------------------------------------------
+require(randomForest)
+datafirst9<-fread("C:/Users/user/Desktop/BDA/data/naracvarsplit/datafirst9.csv",header=T,sep=",")
+data<-cbind(datafirst9$Affection,data)
+data<-data[,-2]
+data[] <- lapply( data, factor) # the "[]" keeps the dataframe structure
+ col_names <- names(data)
+colnames(data)[1] <- "Affection"
+str(data)
+
+rf10000<-randomForest(Affection~.,data=data,importance=T,proximity=T,do.trace=200,ntree=1000,na.action=na.roughfix)
+
+plot(rf10000,main="")
+
+layout(matrix(c(1,2),nrow=1),
+       width=c(4,1)) 
+par(mar=c(5,4,4,0)) #No margin on the right side
+plot(rf10000, log="y",main="all selected 10000 snps set")
+par(mar=c(5,0,4,2)) #No margin on the left side
+plot(c(0,1),type="n", axes=F, xlab="", ylab="")
+legend("top", colnames(rf10000$err.rate),col=1:4,cex=0.8,fill=1:4)
+
+varImpPlot(rf10000,type=2,main="Variable Importance all selected 10000 snps set")
+
+
+rn <- round(importance(rf10000), 2)
+names<-dimnames(rn)[[1]][1:4400]
+all4400<-data[ , which(names(data) %in% names)]
+all4400<-setDF(all4400)
+dim(all4400)
+write.csv(all4400,"all4400.csv")
+
+all4400<-cbind(datafirst9$Affection,all4400)
+all4400[] <- lapply(all4400, factor) # the "[]" keeps the dataframe structure
+ col_names <- names(all4400)
+colnames(all4400)[1] <- "Affection"
+str(all4400)
+
+rf4400<-randomForest(Affection~.,data=all4400,importance=T,proximity=T,do.trace=1000,ntree=1000,na.action=na.roughfix)
+rf4400.1<-randomForest(Affection~.,data=all4400,importance=T,proximity=T,do.trace=1000,ntree=1000,na.action=na.roughfix)
+rf4400.2<-randomForest(Affection~.,data=all4400,importance=T,proximity=T,do.trace=1000,ntree=1000,na.action=na.roughfix)
+rf4400.3<-randomForest(Affection~.,data=all4400,importance=T,proximity=T,do.trace=1000,ntree=1000,na.action=na.roughfix)
+rf4400.4<-randomForest(Affection~.,data=all4400,importance=T,proximity=T,do.trace=1000,ntree=1000,na.action=na.roughfix)
+
+plot(rf4400,main="")
+
+layout(matrix(c(1,2),nrow=1),
+       width=c(4,1)) 
+par(mar=c(5,4,4,0)) #No margin on the right side
+plot(rf4400, log="y",main="all selected 4400 snps set")
+par(mar=c(5,0,4,2)) #No margin on the left side
+plot(c(0,1),type="n", axes=F, xlab="", ylab="")
+legend("top", colnames(rf4400$err.rate),col=1:4,cex=0.8,fill=1:4)
+
+varImpPlot(rf4400,type=2,main="Variable Importance all selected 4400 snps set")
+
+

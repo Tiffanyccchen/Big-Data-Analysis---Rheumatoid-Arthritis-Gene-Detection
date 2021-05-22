@@ -1,0 +1,15 @@
+/別組的分析報告
+/負責論文之相關資料
+/評分與建議表
+/dataanalyze/*.docx
+*.docx
+*.pptx
+!HPCLUSTER-USER_for_IP39_20170305.docx
+/data/dataselectmerge.csv
+/data/narac.csv
+/dataanalyze/finalanalyze/cluster_add_rec/datarecessive.csv
+/dataanalyze/finalanalyze/cluster_add_rec/dataselectmergetran.csv
+/dataanalyze/3rdanalyze/recode/selectsnpstran.csv
+/dataanalyze/3rdanalyze/cluster/all4400.csv
+/dataanalyze/3rdanalyze/cluster/cluster10000.csv
+/dataanalyze/2ndanalyze/slice/selectsnps.csv
