@@ -1,5 +1,6 @@
 # Big-Data-Analysis---Rheumatoid-Arthritis-Gene-Detection-2018
-Final Project for the Big Data Analysis Course (ran on cluster and both local machine) - Data Cleaning, EDA, Modeling, and Inferencing using Random Forest
+Final Project for the Big Data Analysis Course (ran on both cluster and local machine)   
+Data Cleaning, EDA, Modeling, and Inferencing using Random Forest and Logistic Regression
 
 ## Introduction
 The whole analysis process is in the team3GWAS.pdf.
